@@ -1,194 +1,170 @@
-Rossmann Demand Forecasting
+# Rossmann Demand Forecasting
 
-Overview
+Retail demand forecasting project using the Rossmann Store Sales dataset, CatBoost, and time-series feature engineering.
 
-This project focuses on daily retail demand forecasting using the Rossmann Store Sales dataset.
+## Overview
 
-The objective is to predict store-level daily sales using historical sales patterns, promotional information, store characteristics, and calendar features.
+This project focuses on predicting daily store-level sales using historical sales patterns, promotional activities, store characteristics, competition information, and calendar-based features.
 
-Dataset
+The project uses chronological validation to prevent future information from leaking into the training process.
 
-1,017,209 training records
+## Dataset
 
-1,115 stores
+- **1,017,209** training records
+- **1,115** stores
+- Training period: **2013-01-01 → 2015-07-31**
+- Test period: **2015-08-01 → 2015-09-17**
+- **41,088** test records
 
-Training period: 2013-01-01 – 2015-07-31
+## Project Workflow
 
-Test period: 2015-08-01 – 2015-09-17
+- Data loading and quality analysis
+- Missing-value analysis
+- Duplicate detection
+- Train and store data merging
+- Exploratory data analysis
+- Calendar feature engineering
+- Time-based train/validation split
+- Baseline CatBoost model
+- Lag and rolling-window feature engineering
+- Final CatBoost model
+- Model evaluation
+- Feature importance analysis
+- Test-set forecasting
 
-Test records: 41,088
+## Feature Engineering
 
-Approach
+### Calendar Features
 
-Data Preparation
+- Year
+- Month
+- Day
+- Week of Year
+- Quarter
+- Day of Week
+- Weekend indicator
 
-Missing-value and duplicate analysis
+### Historical Sales Features
 
-Merging transaction data with store metadata
+- `Sales_Lag_1`
+- `Sales_Lag_7`
+- `Sales_Lag_14`
+- `Sales_Rolling_7`
+- `Sales_Rolling_14`
+- `Sales_Rolling_28`
 
-Date and calendar feature engineering
+Rolling features were calculated using previous observations only to avoid data leakage.
 
-Chronological train/validation split to avoid data leakage
+### Store and Business Features
 
-Feature Engineering
+- Store
+- Store Type
+- Assortment
+- Competition Distance
+- Competition Open Since
+- Promo
+- Promo2
+- State Holiday
+- School Holiday
+- Promo Interval
 
-Calendar features
+## Model
 
-Year
+The main machine learning algorithm used in this project is **CatBoost Regressor**.
 
-Month
+Two models were developed and compared:
 
-Day
+### Baseline CatBoost
 
-Week of Year
+The baseline model uses store, promotion, calendar, and store characteristics.
 
-Quarter
+### CatBoost + Lag/Rolling Features
 
-Day of Week
+The final model incorporates historical sales behavior through lag and rolling-window features.
 
-Weekend indicator
+## Validation Strategy
 
-Historical sales features
+A chronological split was used instead of a random train-test split.
 
-Sales Lag 1
+**Training:** 2013-01-01 → 2015-06-19
 
-Sales Lag 7
+**Validation:** 2015-06-20 → 2015-07-31
 
-Sales Lag 14
+This approach reflects a real-world forecasting scenario where future observations are not available during training.
 
-7-day rolling average
+## Model Performance
 
-14-day rolling average
+| Model | MAE | RMSE | R² |
+|---|---:|---:|---:|
+| Baseline CatBoost | 658.37 | 984.85 | 0.9301 |
+| **CatBoost + Lag/Rolling** | **475.96** | **740.65** | **0.9605** |
 
-28-day rolling average
+Adding lag and rolling-window features improved RMSE from **984.85 to 740.65**, representing an approximately **24.8% improvement**.
 
-Business/store features
+### Model Comparison
 
-Store Type
+![Model Comparison](./model_comparison.png)
 
-Assortment
+## Actual vs Predicted Sales
 
-Competition Distance
+The final model closely follows the actual daily sales pattern during the validation period, including weekly fluctuations and major sales peaks.
 
-Promo
+![Actual vs Predicted Daily Sales](./actual_vs_predicted.png)
 
-Promo2
+## Feature Importance
 
-State Holiday
+The most important features identified by the final CatBoost model were:
 
-School Holiday
+| Feature | Importance |
+|---|---:|
+| Open | 41.21 |
+| Promo | 11.33 |
+| Sales_Rolling_28 | 9.47 |
+| Sales_Lag_14 | 8.50 |
+| Sales_Lag_1 | 7.92 |
+| Sales_Rolling_7 | 3.84 |
+| Day | 3.71 |
+| Sales_Lag_7 | 3.02 |
 
-Modeling
+The results indicate that store operating status, promotional activity, and historical demand patterns are the strongest predictors of sales.
 
-A CatBoost Regressor was used as the main forecasting model.
+![Feature Importance](./feature_importance.png)
 
-Two models were evaluated:
+## Test Forecasting
 
-Baseline CatBoost using store, promotion, calendar, and store characteristics.
+The final model generated predictions for all **41,088** test records.
 
-CatBoost + Lag/Rolling Features incorporating historical sales behavior.
+The predictions were exported in Kaggle submission format:
 
-Validation was performed chronologically:
-
-Training: 2013-01-01 → 2015-06-19
-
-Validation: 2015-06-20 → 2015-07-31
-
-Results
-
-Model
-
-MAE
-
-RMSE
-
-R²
-
-Baseline CatBoost
-
-658.37
-
-984.85
-
-0.9301
-
-CatBoost + Lag/Rolling
-
-475.96
-
-740.65
-
-0.9605
-
-Adding lag and rolling-window features reduced RMSE by approximately 24.8% and improved R² from 0.9301 to 0.9605.
-
-
-
-Actual vs Predicted Sales
-
-The validation predictions closely follow the daily sales pattern, including weekly fluctuations and major peaks.
-
-
-
-Feature Importance
-
-The strongest model features were:
-
-Open
-
-Promo
-
-Sales_Rolling_28
-
-Sales_Lag_14
-
-Sales_Lag_1
-
-Sales_Rolling_7
-
-Day
-
-Sales_Lag_7
-
-
-
-The results highlight the importance of store operating status, promotions, and historical demand patterns.
-
-Test Forecast
-
-The final model generated predictions for all 41,088 test records.
-
-The predictions were exported to:
-
-submission.csv
+```text
+Id,Sales
 
 Technologies
-
 Python
-
 Pandas
-
 NumPy
-
 Matplotlib
-
 Scikit-learn
-
 CatBoost
-
 Google Colab
-
-Repository Structure
+Jupyter Notebook
 
 rossmann-demand-forecasting/
 │
 ├── Demand_Forecasting_Rossmann.ipynb
 ├── README.md
-├── feature_importance.png
 ├── actual_vs_predicted.png
-├── model_comparison.png
-└── .gitignore
+├── feature_importance.png
+└── model_comparison.png
 
 Key Takeaway
 
-Historical demand information substantially improved forecasting performance. The final CatBoost model achieved RMSE 740.65, MAE 475.96, and R² 0.9605 on the time-based validation set.
+Historical sales information provided substantial predictive value.
+
+By adding lag and rolling-window features to the CatBoost model:
+
+RMSE improved by 24.8%
+MAE decreased from 658.37 to 475.96
+R² increased from 0.9301 to 0.9605
+
+This project demonstrates an end-to-end demand forecasting workflow combining business-oriented features, time-series feature engineering, machine learning, and model evaluation.
